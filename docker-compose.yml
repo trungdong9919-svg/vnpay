@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  cdstore:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: murach-cdstore
+    ports:
+      - "8080:8080"
+    environment:
+      # ── VNPay Configuration ─────────────────────────────────
+      # THAY THẾ bằng thông tin thật khi production:
+      # Đăng ký tại: https://sandbox.vnpayment.vn/devreg/
+      - VNP_TMN_CODE=DEMO2024
+      - VNP_HASH_SECRET=ABCDEFGHIJKLMNOPQRSTUVWXYZ123456
+      # ── Tomcat / JVM ─────────────────────────────────────────
+      - JAVA_OPTS=-Xmx512m -Xms256m -Djava.security.egd=file:/dev/./urandom
+      - CATALINA_OPTS=-Dfile.encoding=UTF-8
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      # Persist Tomcat logs (optional)
+      - tomcat_logs:/usr/local/tomcat/logs
+    networks:
+      - cdstore_net
+
+volumes:
+  tomcat_logs:
+
+networks:
+  cdstore_net:
+    driver: bridge
